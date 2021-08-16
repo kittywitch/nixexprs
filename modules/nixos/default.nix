@@ -1,4 +1,5 @@
 {
+  network = ./network.nix;
   firewall = ./firewall.nix;
   fusionpbx = ./fusionpbx.nix;
   nftables = ./nftables.nix;
