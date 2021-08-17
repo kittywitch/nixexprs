@@ -178,7 +178,7 @@ in {
       }) cfg.extraCerts)
       ]);
 
-      services.nginx.virtualHosts = mkMerge (map (host: cfg.dns.enable host) [
+      services.nginx.virtualHosts = mkMerge (map (host: mkIf cfg.dns.enable host) [
         (mkIf config.services.nginx.enable (mapAttrs' (n: v:
         nameValuePair v.domain {
           useACMEHost = "${n}_${config.networking.hostName}";
