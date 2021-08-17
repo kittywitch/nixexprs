@@ -1,3 +1,4 @@
+set -x
 DISK=$1
 DM_NAME=$(basename $DISK)
 if [[ ! -e /dev/mapper/$DM_NAME ]]; then
@@ -36,6 +37,6 @@ unit: sectors
 grain: 512
 sector-size: 512
 
-${DM_NAME}1 : start=2048, size=$BLOCK_SIZE, type=$DISK_TYPE
+1 : start=2048, size=$BLOCK_SIZE, type=$DISK_TYPE
 EOF
-	fi
+fi
