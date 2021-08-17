@@ -4,6 +4,7 @@ with lib;
 
 {
   options.network = {
+    enable = mkEnableOption "Use kat's network module?";
     addresses = mkOption {
       type = with types; attrsOf (submodule ({ name, ... }: {
         options = {
@@ -56,6 +57,7 @@ with lib;
       };
     };
     dns = {
+      enable = mkEnableOption "Do you want DNS to be semi-managed through this module?";
       isRoot = mkEnableOption "Is this system supposed to be the @ for the domain?";
       email = mkOption {
         type = types.nullOr types.str;
