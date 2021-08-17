@@ -1,4 +1,4 @@
-{ config, lib, tf, ... }:
+{ config, lib, tf, pkgs, ... }:
 
 with lib;
 
