@@ -64,6 +64,9 @@ writeShellScriptBin "win10-vm" ''
    -blockdev '{"driver":"host_device","filename":"/dev/disk/by-id/ata-HFS256G32TNF-N3A0A_MJ8BN15091150BM1Z","node-name":"libvirt-2-storage","auto-read-only":true,"discard":"unmap"}' \
    -blockdev '{"node-name":"libvirt-2-format","read-only":false,"discard":"unmap","driver":"raw","file":"libvirt-2-storage"}' \
    -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=0,device_id=drive-scsi0-0-0-0,drive=libvirt-2-format,id=scsi0-0-0-0,bootindex=2 \
+   -blockdev '{"driver":"host_device","filename":"/dev/mapper/ata-ST2000DM008-2FR102_WK301C3H-part2","aio":"native","node-name":"libvirt-1-storage","cache":{"direct":true,"no-flush":false},"auto-read-only":true,"discard":"unmap"}' \
+   -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=1,device_id=drive-scsi0-0-0-1,drive=libvirt-1-format,id=scsi0-0-0-1,bootindex=3 \
+   -blockdev '{"node-name":"libvirt-1-format","read-only":false,"cache":{"direct":true,"no-flush":false},"driver":"raw","file":"libvirt-1-storage"}' \
    -device virtio-net-pci,netdev=hostnet0,id=net0,mac=5b:f2:eb:3c:0b:46 \
    -netdev bridge,id=hostnet0,br=br,helper=$(type -P qemu-bridge-helper) \
    -netdev user,id=smbnet0,restrict=yes,net=10.1.2.0/24,host=10.1.2.1,smb=/home/kat/shared/,smbserver=10.1.2.2 \
@@ -72,9 +75,6 @@ writeShellScriptBin "win10-vm" ''
    -device vfio-pci,host=0000:29:00.1,id=hostdev1,bus=pci.9,addr=0x0 \
    -device vfio-pci,host=0000:28:00.0,id=hostdev3,bus=pci.11,addr=0x0 \
    -device vfio-pci,host=0000:2b:00.3,id=hostdev4,bus=pci.19,addr=0x0 \
-  -blockdev '{"driver":"host_device","filename":"/dev/mapper/ata-ST2000DM008-2FR102_WK301C3H-part2","aio":"native","node-name":"libvirt-1-storage","cache":{"direct":true,"no-flush":false},"auto-read-only":true,"discard":"unmap"}' \
- -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=1,device_id=drive-scsi0-0-0-1,drive=libvirt-1-format,id=scsi0-0-0-1,bootindex=3 \
-  -blockdev '{"node-name":"libvirt-1-format","read-only":false,"cache":{"direct":true,"no-flush":false},"driver":"raw","file":"libvirt-1-storage"}' \
    -device virtio-balloon-pci,id=balloon0,bus=pci.5,addr=0x0 \
    -chardev socket,path=/tmp/vfio-qmp,server,nowait,id=qmp0 \
    -mon chardev=qmp0,id=qmp,mode=control \
@@ -85,4 +85,4 @@ writeShellScriptBin "win10-vm" ''
    -msg timestamp=on
 ''
 
-# -device vfio-pci,host=0000:21:00.0,id=hostdev2,bus=pci.12,addr=0x0 \
+# -device vfio-pci,host=0000:21:00.0,id,addr=0x0 \
