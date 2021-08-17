@@ -10,14 +10,14 @@ if [[ ! -e /dev/mapper/$DM_NAME ]]; then
 	DISK_SIZE=$(((BLOCK_SIZE + 2048 + 2047) / 2048 * 2048))
 	dd if=/dev/zero of=$MBR_FILE bs=512 count=2048 status=none
 
-	LDEV=$(sudo losetup --show -f $MBR_FILE)
+	LDEV=$(losetup --show -f $MBR_FILE)
 	END_GUARD=$((DISK_SIZE - 2048 - BLOCK_SIZE))
 	if [[ $END_GUARD -ne 0 ]]; then
 		END_GUARD="$((BLOCK_SIZE + 2048)) $END_GUARD zero"
 	else
 		END_GUARD=
 	fi
-	sudo dmsetup create $DM_NAME <<EOF
+	dmsetup create $DM_NAME <<EOF
 0 2048 linear $LDEV 0
 2048 $BLOCK_SIZE linear $DISK 0
 $END_GUARD
@@ -26,8 +26,8 @@ CYL=$((DISK_SIZE / 2048))
 if [[ $CYL -gt 65535 ]]; then
 	CYL=65535
 fi
-sudo dmsetup setgeometry $DM_NAME $CYL 64 32 0
-sudo chown "$USER" /dev/mapper/$DM_NAME
+dmsetup setgeometry $DM_NAME $CYL 64 32 0
+chown "$USER" /dev/mapper/$DM_NAME
 sfdisk --quiet --no-tell-kernel --no-reread /dev/mapper/$DM_NAME <<EOF
 label: dos
 label-id: 0x${DISK_ID:8}
