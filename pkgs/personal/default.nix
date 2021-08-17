@@ -1,4 +1,5 @@
 {
+  disk-mapper = import ./disk-mapper;
   screenstub-kat = import ./screenstub-kat;
   sway-scrot = import ./sway-scrot;
   host-splash-site = ./host-splash-site;
