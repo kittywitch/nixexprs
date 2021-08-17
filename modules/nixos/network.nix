@@ -165,7 +165,7 @@ in {
         inherit (v) domain;
         dnsProvider = "rfc2136";
         credentialsFile = config.secrets.files.dns_creds.path;
-        group = "nginx";
+        group = mkDefault "nginx";
 
       }) networksWithDomains))
       (mapAttrs' (n: v:
@@ -173,7 +173,7 @@ in {
           domain = v;
         dnsProvider = "rfc2136";
         credentialsFile = config.secrets.files.dns_creds.path;
-        group = "nginx";
+        group = mkDefault "nginx";
 
         }) cfg.extraCerts)
     ];
