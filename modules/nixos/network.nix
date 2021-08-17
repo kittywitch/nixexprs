@@ -6,6 +6,7 @@ let
   cfg = config.network;
 in {
   options.network = {
+    enable = mkEnableOption "Use kat's network module?";
     addresses = mkOption {
       type = with types; attrsOf (submodule ({ name, options, config, ... }: {
         options = {
@@ -73,6 +74,7 @@ in {
       };
     };
     dns = {
+      enable = mkEnableOption "Do you want DNS to be semi-managed through this module?";
       isRoot = mkEnableOption "Is this system supposed to be the @ for the domain?"; # TODO
       email = mkOption {
         type = types.nullOr types.str;
@@ -89,15 +91,15 @@ in {
   config = let
     networks = cfg.addresses;
     networksWithDomains = filterAttrs (_: v: v.subdomain != null && v.enable) networks;
-  in {
+  in mkIf cfg.enable {
     lib.kw.virtualHostGen = args: virtualHostGen ({ inherit config; } // args);
 
     network = {
-      dns = {
+      dns = mkIf cfg.dns.enable {
         domain = builtins.substring 0 ((builtins.stringLength cfg.dns.tld) - 1) cfg.dns.tld;
       };
       addresses = {
-        private =  {
+        private = mkIf cfg.dns.enable {
           prefix = "int";
           subdomain = "${config.networking.hostName}.${cfg.addresses.private.prefix}";
         };
@@ -106,14 +108,14 @@ in {
             ipv4.address = mkIf (cfg.tf.ipv4_attr != null) (tf.resources."${config.networking.hostName}".refAttr config.network.tf.ipv4_attr);
             ipv6.address = mkIf (cfg.tf.ipv6_attr != null) (tf.resources."${config.networking.hostName}".refAttr config.network.tf.ipv6_attr);
           })
-          ({
+          (mkIf cfg.dns.enable {
             subdomain = "${config.networking.hostName}";
           })
         ];
         yggdrasil = mkIf cfg.yggdrasil.enable {
           ipv6.address = cfg.yggdrasil.address;
           prefix = "ygg";
-          subdomain = "${config.networking.hostName}.${cfg.addresses.yggdrasil.prefix}";
+          subdomain =  mkIf cfg.dns.enable "${config.networking.hostName}.${cfg.addresses.yggdrasil.prefix}";
         };
       };
     };
@@ -140,7 +142,7 @@ in {
         domain = v.subdomain;
         aaaa.address = v.ipv6.address;
       }) networksWithDomains;
-    in mkMerge [
+    in mkIf cfg.dns.enable (mkMerge [
       recordsV4
       recordsV6
       (mkIf cfg.dns.isRoot {
@@ -157,29 +159,27 @@ in {
           aaaa.address = cfg.addresses.public.ipv6.address;
         };
       })
-    ];
+    ]);
 
-    security.acme.certs = mkMerge [
+    security.acme.certs = mkIf cfg.dns.enable (mkMerge [
       (mkIf config.services.nginx.enable (mapAttrs' (n: v:
       nameValuePair "${n}_${config.networking.hostName}" {
         inherit (v) domain;
         dnsProvider = "rfc2136";
         credentialsFile = config.secrets.files.dns_creds.path;
         group = mkDefault "nginx";
-
       }) networksWithDomains))
       (mapAttrs' (n: v:
-        nameValuePair "${n}" {
-          domain = v;
-        dnsProvider = "rfc2136";
-        credentialsFile = config.secrets.files.dns_creds.path;
-        group = mkDefault "nginx";
+      nameValuePair "${n}" {
+      domain = v;
+      dnsProvider = "rfc2136";
+      credentialsFile = config.secrets.files.dns_creds.path;
+      group = mkDefault "nginx";
+      }) cfg.extraCerts)
+      ]);
 
-        }) cfg.extraCerts)
-    ];
-
-    services.nginx.virtualHosts = mkMerge [
-      (mkIf config.services.nginx.enable (mapAttrs' (n: v:
+      services.nginx.virtualHosts = mkIf cfg.dns.enable ( mkMerge [
+        (mkIf config.services.nginx.enable (mapAttrs' (n: v:
         nameValuePair v.domain {
           useACMEHost = "${n}_${config.networking.hostName}";
           forceSSL = true;
@@ -188,9 +188,9 @@ in {
         nameValuePair v {
           useACMEHost = "${n}";
           forceSSL = true;
-          }) cfg.extraCerts)
-    ];
+        }) cfg.extraCerts)
+      ]);
 
-    _module.args = { inherit (config.lib) kw; };
-  };
-}
+      _module.args = { inherit (config.lib) kw; };
+    };
+  }
