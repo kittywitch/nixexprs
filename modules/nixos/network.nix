@@ -118,6 +118,8 @@ in {
       };
     };
 
+    services.yggdrasil.package = mkIf cfg.yggdrasil.enable pkgs.yggdrasil-held;
+
     networking = mkIf cfg.addresses.private.enable {
       inherit (config.network.dns) domain;
       defaultGateway = cfg.privateGateway;

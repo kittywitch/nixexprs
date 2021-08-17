@@ -1,20 +1,15 @@
 {
-  dino-omemo = { dino, ... }: dino.overrideAttrs (
-    { patches ? [ ], ... }: {
-      patches = patches ++ [
-        ./dino/0001-add-an-option-to-enable-omemo-by-default-in-new-conv.patch
-      ];
-    }
-    );
+  akiflags = import ./akiflags;
 
-    akiflags = import ./akiflags;
+  fusionpbx = import ./fusionpbx;
+  fusionpbx-apps = import ./fusionpbx-apps;
 
-    libreelec-dvb-firmware = import ./libreelec-dvb-firmware/default.nix;
-    fusionpbx = import ./fusionpbx;
-    fusionpbx-apps = import ./fusionpbx-apps;
+  fusionpbxWithApps = { symlinkJoin, fusionpbx, ... }: apps: symlinkJoin {
+    inherit (fusionpbx) version name;
+    paths = [ fusionpbx ] ++ apps;
+  };
 
-    fusionpbxWithApps = { symlinkJoin, fusionpbx, ... }: apps: symlinkJoin {
-      inherit (fusionpbx) version name;
-      paths = [ fusionpbx ] ++ apps;
-    };
-  }
+  libreelec-dvb-firmware = import ./libreelec-dvb-firmware/default.nix;
+
+  yggdrasil-held = import ./yggdrasil;
+}
