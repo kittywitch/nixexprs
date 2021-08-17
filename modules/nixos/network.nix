@@ -75,7 +75,7 @@ in {
     };
     dns = {
       enable = mkEnableOption "Do you want DNS to be semi-managed through this module?";
-      isRoot = mkEnableOption "Is this system supposed to be the @ for the domain?"; # TODO
+      isRoot = mkEnableOption "Is this system supposed to be the @ for the domain?";
       email = mkOption {
         type = types.nullOr types.str;
       };
@@ -115,12 +115,12 @@ in {
         yggdrasil = mkIf cfg.yggdrasil.enable {
           ipv6.address = cfg.yggdrasil.address;
           prefix = "ygg";
-          subdomain =  mkIf cfg.dns.enable "${config.networking.hostName}.${cfg.addresses.yggdrasil.prefix}";
+          subdomain = "${config.networking.hostName}.${cfg.addresses.yggdrasil.prefix}";
         };
       };
     };
 
-    services.yggdrasil.package = mkIf cfg.yggdrasil.enable pkgs.yggdrasil-held;
+    services.yggdrasil.package = pkgs.yggdrasil-held;
 
     networking = mkIf cfg.addresses.private.enable {
       inherit (config.network.dns) domain;
@@ -142,7 +142,7 @@ in {
         domain = v.subdomain;
         aaaa.address = v.ipv6.address;
       }) networksWithDomains;
-    in mkIf cfg.dns.enable (mkMerge [
+    in mkMerge (map (record: mkIf cfg.dns.enable record) [
       recordsV4
       recordsV6
       (mkIf cfg.dns.isRoot {
@@ -161,7 +161,7 @@ in {
       })
     ]);
 
-    security.acme.certs = mkIf cfg.dns.enable (mkMerge [
+    security.acme.certs = mkMerge (map (cert: mkIf cfg.dns.enable cert ) [
       (mkIf config.services.nginx.enable (mapAttrs' (n: v:
       nameValuePair "${n}_${config.networking.hostName}" {
         inherit (v) domain;
@@ -178,7 +178,7 @@ in {
       }) cfg.extraCerts)
       ]);
 
-      services.nginx.virtualHosts = mkIf cfg.dns.enable ( mkMerge [
+      services.nginx.virtualHosts = mkMerge (map (host: cfg.dns.enable host) [
         (mkIf config.services.nginx.enable (mapAttrs' (n: v:
         nameValuePair v.domain {
           useACMEHost = "${n}_${config.networking.hostName}";
