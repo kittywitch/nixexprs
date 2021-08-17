@@ -72,9 +72,9 @@ writeShellScriptBin "win10-vm" ''
    -device vfio-pci,host=0000:29:00.1,id=hostdev1,bus=pci.9,addr=0x0 \
    -device vfio-pci,host=0000:28:00.0,id=hostdev3,bus=pci.11,addr=0x0 \
    -device vfio-pci,host=0000:2b:00.3,id=hostdev4,bus=pci.19,addr=0x0 \
-#  -blockdev '{"driver":"host_device","filename":"/dev/mapper/ata-ST2000DM008-2FR102_WK301C3H-part2","aio":"native","node-name":"libvirt-1-storage","cache":{"direct":true,"no-flush":false},"auto-read-only":true,"discard":"unmap"}' \
-# -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=1,device_id=drive-scsi0-0-0-1,drive=libvirt-1-format,id=scsi0-0-0-1,bootindex=3 \
-#  -blockdev '{"node-name":"libvirt-1-format","read-only":false,"cache":{"direct":true,"no-flush":false},"driver":"raw","file":"libvirt-1-storage"}' \
+  -blockdev '{"driver":"host_device","filename":"/dev/mapper/ata-ST2000DM008-2FR102_WK301C3H-part2","aio":"native","node-name":"libvirt-1-storage","cache":{"direct":true,"no-flush":false},"auto-read-only":true,"discard":"unmap"}' \
+ -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=1,device_id=drive-scsi0-0-0-1,drive=libvirt-1-format,id=scsi0-0-0-1,bootindex=3 \
+  -blockdev '{"node-name":"libvirt-1-format","read-only":false,"cache":{"direct":true,"no-flush":false},"driver":"raw","file":"libvirt-1-storage"}' \
    -device virtio-balloon-pci,id=balloon0,bus=pci.5,addr=0x0 \
    -chardev socket,path=/tmp/vfio-qmp,server,nowait,id=qmp0 \
    -mon chardev=qmp0,id=qmp,mode=control \
