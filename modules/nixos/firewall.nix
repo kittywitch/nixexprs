@@ -4,7 +4,8 @@ with lib;
 
 let
   cfg = config.network.firewall;
-in {
+in
+{
   options.network.firewall = {
     public.tcp.ports = mkOption {
       type = types.listOf types.port;
@@ -55,27 +56,27 @@ in {
   config = {
     network.firewall = mkMerge (mapAttrsToList (_: user: user.network.firewall) config.home-manager.users);
     networking.firewall.interfaces =
-          let
-            fwTypes = {
-              ports = "Ports";
-              ranges = "PortRanges";
-            };
+      let
+        fwTypes = {
+          ports = "Ports";
+          ranges = "PortRanges";
+        };
 
-            interfaceDef = visibility:
-            listToAttrs (flatten (mapAttrsToList
+        interfaceDef = visibility:
+          listToAttrs (flatten (mapAttrsToList
             (type: typeString:
-            map
-            (proto: {
-              name = "allowed${toUpper proto}${typeString}";
-              value = cfg.${visibility}.${proto}.${type};
-            }) [ "tcp" "udp" ])
+              map
+                (proto: {
+                  name = "allowed${toUpper proto}${typeString}";
+                  value = cfg.${visibility}.${proto}.${type};
+                }) [ "tcp" "udp" ])
             fwTypes));
 
-            interfaces = visibility:
-            listToAttrs
+        interfaces = visibility:
+          listToAttrs
             (map (interface: nameValuePair interface (interfaceDef visibility))
-            cfg.${visibility}.interfaces);
-          in
-          mkMerge (map (visibility: interfaces visibility) [ "public" "private" ]);
-    };
-  }
+              cfg.${visibility}.interfaces);
+      in
+      mkMerge (map (visibility: interfaces visibility) [ "public" "private" ]);
+  };
+}

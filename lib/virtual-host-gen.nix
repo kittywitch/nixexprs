@@ -6,4 +6,5 @@ let
   networkValues = attrValues filteredNetworks;
   addressList = concatMap (n: n.out.identifierList) networkValues;
   hostBlocks = map (host: nameValuePair host block) addressList;
-in listToAttrs hostBlocks
+in
+listToAttrs hostBlocks

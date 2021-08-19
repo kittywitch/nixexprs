@@ -1,4 +1,4 @@
-{ stdenv, fetchFromGitHub, lib}:
+{ stdenv, fetchFromGitHub, lib }:
 
 stdenv.mkDerivation rec {
   name = "libreelec-fw-dvb";

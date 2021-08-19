@@ -1,6 +1,5 @@
-{
-  nixpkgs ? import <nixpkgs> { },
-  nixlib ? nixpkgs.lib
+{ nixpkgs ? import <nixpkgs> { }
+, nixlib ? nixpkgs.lib
 }: rec {
   modules = import ./modules;
   overlays = import ./overlays;

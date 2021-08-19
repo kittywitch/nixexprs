@@ -1,8 +1,10 @@
 { stdenv, wrapShellScriptBin, pkgs }:
 
-let toggle = wrapShellScriptBin "konawall-toggle" ./toggle.sh { };
-status = wrapShellScriptBin "konawall-status" ./status.sh { };
-in stdenv.mkDerivation {
+let
+  toggle = wrapShellScriptBin "konawall-toggle" ./toggle.sh { };
+  status = wrapShellScriptBin "konawall-status" ./status.sh { };
+in
+stdenv.mkDerivation {
   pname = "konawall-toggle";
   version = "0.0.1";
   unpackPhase = "true";

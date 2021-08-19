@@ -1,5 +1,5 @@
 {
-  dino-omemo = { dino, ... }: dino.overrideAttrs ( { patches ? [ ], ... }: {
+  dino-omemo = { dino, ... }: dino.overrideAttrs ({ patches ? [ ], ... }: {
     patches = patches ++ [
       ./dino/0001-add-an-option-to-enable-omemo-by-default-in-new-conv.patch
     ];
