@@ -2,9 +2,9 @@
 
 with lib;
 
-let
-  cfg = config.network.firewall;
-in {
+let cfg = config.network.firewall;
+in
+{
   options.network.firewall = {
     public.tcp.ports = mkOption {
       type = types.listOf types.port;
@@ -51,31 +51,4 @@ in {
       default = [ ];
     };
   };
-
-  config = {
-    network.firewall = mkMerge (mapAttrsToList (_: user: user.network.firewall) config.home-manager.users);
-    networking.firewall.interfaces =
-          let
-            fwTypes = {
-              ports = "Ports";
-              ranges = "PortRanges";
-            };
-
-            interfaceDef = visibility:
-            listToAttrs (flatten (mapAttrsToList
-            (type: typeString:
-            map
-            (proto: {
-              name = "allowed${toUpper proto}${typeString}";
-              value = cfg.${visibility}.${proto}.${type};
-            }) [ "tcp" "udp" ])
-            fwTypes));
-
-            interfaces = visibility:
-            listToAttrs
-            (map (interface: nameValuePair interface (interfaceDef visibility))
-            cfg.${visibility}.interfaces);
-          in
-          mkMerge (map (visibility: interfaces visibility) [ "public" "private" ]);
-    };
-  }
+}
