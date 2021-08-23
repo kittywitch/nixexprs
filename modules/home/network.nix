@@ -1,4 +1,4 @@
-{ config, superConfig, lib, ... }:
+{ config, nixos, lib, ... }:
 
 with lib;
 
@@ -73,9 +73,9 @@ with lib;
   };
 
   config = {
-    network.addresses = superConfig.network.addresses;
-    network.privateGateway = superConfig.network.privateGateway;
-    network.tf = superConfig.network.tf;
-    network.dns = superConfig.network.dns;
+    network.addresses = nixos.network.addresses;
+    network.privateGateway = nixos.network.privateGateway;
+    network.tf = nixos.network.tf;
+    network.dns = nixos.network.dns;
   };
 }
