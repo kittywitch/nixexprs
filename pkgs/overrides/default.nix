@@ -11,4 +11,5 @@
     clockSupport = true;
   };
   discord-nssfix = { discord, nss, ... }: discord.override { inherit nss; };
+  element-nssfix = { element-desktop, nss, ... }: element-desktop.override { inherit nss; };
 }
