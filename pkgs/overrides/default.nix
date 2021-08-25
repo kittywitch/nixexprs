@@ -11,5 +11,5 @@
     clockSupport = true;
   };
   discord-nssfix = { discord, nss, ... }: discord.override { inherit nss; };
-  element-nssfix = { element-desktop, nss, ... }: element-desktop.override { inherit nss; };
+  element-wayland = { element-desktop, ... }: element-desktop.override { useWayland = true; };
 }
