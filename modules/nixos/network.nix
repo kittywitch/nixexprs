@@ -11,9 +11,7 @@ in
     addresses = mkOption {
       type = with types; attrsOf (submodule ({ name, options, config, ... }: {
         options = {
-          enable = mkEnableOption "Is the system a part of the ${name} network?" // {
-            default = config.ipv4.enable || config.ipv6.enable;
-          };
+          enable = mkEnableOption "Is it a member of the ${name} network?";
           ipv4 = {
             enable = mkOption {
               type = types.bool;
@@ -21,6 +19,10 @@ in
             };
             address = mkOption {
               type = types.str;
+            };
+            dns = mkOption {
+              type = types.str;
+              default = config.ipv4.address;
             };
           };
           ipv6 = {
@@ -30,6 +32,10 @@ in
             };
             address = mkOption {
               type = types.str;
+            };
+            dns = mkOption {
+              type = types.str;
+              default = config.ipv6.address;
             };
           };
           prefix = mkOption {
@@ -45,11 +51,11 @@ in
           out = {
             identifierList = mkOption {
               type = types.listOf types.str;
-              default = if config.enable then singleton config.domain ++ config.out.addressList else [ ];
+              default = optionals config.enable (singleton config.domain ++ config.out.addressList);
             };
             addressList = mkOption {
               type = types.listOf types.str;
-              default = if config.enable then concatMap (i: optional i.enable i.address) [ config.ipv4 config.ipv6 ] else [ ];
+              default = optionals config.enable (concatMap (i: optional i.enable i.address) [ config.ipv4 config.ipv6 ]);
             };
           };
         };
@@ -66,12 +72,12 @@ in
     tf = {
       enable = mkEnableOption "Was the system provisioned by terraform?";
       ipv4_attr = mkOption {
-        type = types.str;
-        default = "ipv4_address";
+        type = types.nullOr types.str;
+        default = null;
       };
       ipv6_attr = mkOption {
-        type = types.str;
-        default = "ipv6_address";
+        type = types.nullOr types.str;
+        default = null;
       };
     };
     dns = {
@@ -92,7 +98,7 @@ in
   config =
     let
       networks = cfg.addresses;
-      networksWithDomains = filterAttrs (_: v: v.subdomain != null && v.enable) networks;
+      networksWithDomains = filterAttrs (_: v: v.subdomain != null) networks;
     in
     mkIf cfg.enable {
       lib.kw.virtualHostGen = args: virtualHostGen ({ inherit config; } // args);
@@ -108,8 +114,10 @@ in
           };
           public = mkMerge [
             (mkIf cfg.tf.enable {
-              ipv4.address = mkIf (cfg.tf.ipv4_attr != null) (tf.resources."${config.networking.hostName}".refAttr config.network.tf.ipv4_attr);
-              ipv6.address = mkIf (cfg.tf.ipv6_attr != null) (tf.resources."${config.networking.hostName}".refAttr config.network.tf.ipv6_attr);
+              ipv4.dns = mkIf (cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv4_attr);
+              ipv6.dns = mkIf (cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv6_attr);
+              ipv4.address = mkIf (cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.getAttr cfg.tf.ipv4_attr);
+              ipv6.address = mkIf (cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.getAttr cfg.tf.ipv6_attr);
             })
             (mkIf cfg.dns.enable {
               subdomain = "${config.networking.hostName}";
@@ -138,7 +146,7 @@ in
                 enable = v.ipv4.enable;
                 tld = cfg.dns.tld;
                 domain = v.subdomain;
-                a.address = v.ipv4.address;
+                a.address = v.ipv4.dns;
               })
             networksWithDomains;
           recordsV6 = mapAttrs'
@@ -147,7 +155,7 @@ in
                 enable = v.ipv6.enable;
                 tld = cfg.dns.tld;
                 domain = v.subdomain;
-                aaaa.address = v.ipv6.address;
+                aaaa.address = v.ipv6.dns;
               })
             networksWithDomains;
         in
@@ -159,13 +167,13 @@ in
               enable = cfg.addresses.public.enable;
               tld = cfg.dns.tld;
               domain = "@";
-              a.address = cfg.addresses.public.ipv4.address;
+              a.address = cfg.addresses.public.ipv4.dns;
             };
             "node_root_${config.networking.hostName}_v6" = {
               enable = cfg.addresses.public.enable;
               tld = cfg.dns.tld;
               domain = "@";
-              aaaa.address = cfg.addresses.public.ipv6.address;
+              aaaa.address = cfg.addresses.public.ipv6.dns;
             };
           })
         ]);
