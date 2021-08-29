@@ -124,6 +124,7 @@ in
             })
           ];
           yggdrasil = mkIf cfg.yggdrasil.enable {
+            enable = cfg.yggdrasil.enable;
             ipv6.address = cfg.yggdrasil.address;
             prefix = "ygg";
             subdomain = "${config.networking.hostName}.${cfg.addresses.yggdrasil.prefix}";
