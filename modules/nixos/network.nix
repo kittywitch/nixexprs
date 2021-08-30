@@ -12,30 +12,44 @@ in
       type = with types; attrsOf (submodule ({ name, options, config, ... }: {
         options = {
           enable = mkEnableOption "Is it a member of the ${name} network?";
-          ipv4 = {
-            enable = mkOption {
-              type = types.bool;
-              default = options.ipv4.address.isDefined;
+          nixos = {
+            ipv4 = {
+              enable = mkOption {
+                type = types.bool;
+                default = options.nixos.ipv4.address.isDefined;
+              };
+              address = mkOption {
+                type = types.str;
+              };
             };
-            address = mkOption {
-              type = types.str;
-            };
-            dns = mkOption {
-              type = types.str;
-              default = config.ipv4.address;
+            ipv6 = {
+              enable = mkOption {
+                type = types.bool;
+                default = options.nixos.ipv6.address.isDefined;
+              };
+              address = mkOption {
+                type = types.str;
+              };
             };
           };
-          ipv6 = {
-            enable = mkOption {
-              type = types.bool;
-              default = options.ipv6.address.isDefined;
+          tf = {
+            ipv4 = {
+              enable = mkOption {
+                type = types.bool;
+                default = options.tf.ipv4.address.isDefined;
+              };
+              address = mkOption {
+                type = types.str;
+              };
             };
-            address = mkOption {
-              type = types.str;
-            };
-            dns = mkOption {
-              type = types.str;
-              default = config.ipv6.address;
+            ipv6 = {
+              enable = mkOption {
+                type = types.bool;
+                default = options.tf.ipv6.address.isDefined;
+              };
+              address = mkOption {
+                type = types.str;
+              };
             };
           };
           prefix = mkOption {
@@ -55,7 +69,7 @@ in
             };
             addressList = mkOption {
               type = types.listOf types.str;
-              default = optionals config.enable (concatMap (i: optional i.enable i.address) [ config.ipv4 config.ipv6 ]);
+              default = optionals config.enable (concatMap (i: optional i.enable i.address) [ config.nixos.ipv4 config.nixos.ipv6 ]);
             };
           };
         };
@@ -107,29 +121,43 @@ in
         dns = mkIf cfg.dns.enable {
           domain = builtins.substring 0 ((builtins.stringLength cfg.dns.tld) - 1) cfg.dns.tld;
         };
-        addresses = {
-          private = mkIf cfg.dns.enable {
-            prefix = "int";
-            subdomain = "${config.networking.hostName}.${cfg.addresses.private.prefix}";
-          };
-          public = mkMerge [
-            (mkIf cfg.tf.enable {
-              ipv4.dns = mkIf (cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv4_attr);
-              ipv6.dns = mkIf (cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv6_attr);
-              ipv4.address = mkIf (tf.state.resources ? ${tf.resources.${config.networking.hostName}.out.reference} && cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.importAttr cfg.tf.ipv4_attr);
-              ipv6.address = mkIf (tf.state.resources ? ${tf.resources.${config.networking.hostName}.out.reference} && cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.importAttr cfg.tf.ipv6_attr);
-            })
-            (mkIf cfg.dns.enable {
-              subdomain = "${config.networking.hostName}";
-            })
-          ];
-          yggdrasil = mkIf cfg.yggdrasil.enable {
-            enable = cfg.yggdrasil.enable;
-            ipv6.address = cfg.yggdrasil.address;
-            prefix = "ygg";
-            subdomain = "${config.networking.hostName}.${cfg.addresses.yggdrasil.prefix}";
-          };
-        };
+        addresses = lib.mkMerge [
+          (mkIf (!cfg.tf.enable) (genAttrs [ "private" "public" "yggdrasil" ] (network: {
+            tf = {
+              ipv4.address = mkIf (cfg.addresses.${network}.nixos.ipv4.enable) cfg.addresses.${network}.nixos.ipv4.address;
+              ipv6.address = mkIf (cfg.addresses.${network}.nixos.ipv6.enable) cfg.addresses.${network}.nixos.ipv6.address;
+            };
+          })))
+          (mkIf cfg.tf.enable {
+            public = {
+              tf = {
+                ipv4.address = mkIf (cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv4_attr);
+                ipv6.address = mkIf (cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv6_attr);
+              };
+              nixos = {
+                ipv4.address = mkIf (tf.state.resources ? ${tf.resources.${config.networking.hostName}.out.reference} && cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.importAttr cfg.tf.ipv4_attr);
+                ipv6.address = mkIf (tf.state.resources ? ${tf.resources.${config.networking.hostName}.out.reference} && cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.importAttr cfg.tf.ipv6_attr);
+              };
+            };
+          })
+          (mkIf cfg.dns.enable {
+            private = {
+              prefix = "int";
+              subdomain = "${config.networking.hostName}.${cfg.addresses.private.prefix}";
+            };
+            yggdrasil = {
+              enable = cfg.yggdrasil.enable;
+              prefix = "ygg";
+              subdomain = "${config.networking.hostName}.${cfg.addresses.yggdrasil.prefix}";
+            };
+            public = {
+              subdomain = config.networking.hostName;
+            };
+          })
+          (mkIf cfg.yggdrasil.enable {
+            yggdrasil.nixos.ipv6.address = cfg.yggdrasil.address;
+          })
+        ];
       };
 
       services.yggdrasil.package = pkgs.yggdrasil-held;
@@ -144,19 +172,19 @@ in
           recordsV4 = mapAttrs'
             (n: v:
               nameValuePair "node_${n}_${config.networking.hostName}_v4" {
-                enable = v.ipv4.enable;
+                enable = v.tf.ipv4.enable;
                 tld = cfg.dns.tld;
                 domain = v.subdomain;
-                a.address = v.ipv4.dns;
+                a.address = v.tf.ipv4.address;
               })
             networksWithDomains;
           recordsV6 = mapAttrs'
             (n: v:
               nameValuePair "node_${n}_${config.networking.hostName}_v6" {
-                enable = v.ipv6.enable;
+                enable = v.tf.ipv6.enable;
                 tld = cfg.dns.tld;
                 domain = v.subdomain;
-                aaaa.address = v.ipv6.dns;
+                aaaa.address = v.tf.ipv6.address;
               })
             networksWithDomains;
         in
@@ -167,12 +195,12 @@ in
             "node_root_${config.networking.hostName}_v4" = {
               enable = cfg.addresses.public.enable;
               tld = cfg.dns.tld;
-              a.address = cfg.addresses.public.ipv4.dns;
+              a.address = cfg.addresses.public.tf.ipv4.address;
             };
             "node_root_${config.networking.hostName}_v6" = {
               enable = cfg.addresses.public.enable;
               tld = cfg.dns.tld;
-              aaaa.address = cfg.addresses.public.ipv6.dns;
+              aaaa.address = cfg.addresses.public.tf.ipv6.address;
             };
           })
         ]);
