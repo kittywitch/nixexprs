@@ -167,13 +167,11 @@ in
             "node_root_${config.networking.hostName}_v4" = {
               enable = cfg.addresses.public.enable;
               tld = cfg.dns.tld;
-              domain = "@";
               a.address = cfg.addresses.public.ipv4.dns;
             };
             "node_root_${config.networking.hostName}_v6" = {
               enable = cfg.addresses.public.enable;
               tld = cfg.dns.tld;
-              domain = "@";
               aaaa.address = cfg.addresses.public.ipv6.dns;
             };
           })
