@@ -1,7 +1,7 @@
 { lib }: { folder, defaultFile ? "default.nix", folderPaths ? [ ] }: with lib; let
   defaultFileFinal =
     if (defaultFile == "default.nix" && folder == "hosts") then
-      "meta.nix"
+      "nixos.nix"
     else defaultFile;
   folderModLists = map
     (folderPath: modList {

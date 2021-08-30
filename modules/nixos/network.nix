@@ -116,8 +116,8 @@ in
             (mkIf cfg.tf.enable {
               ipv4.dns = mkIf (cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv4_attr);
               ipv6.dns = mkIf (cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv6_attr);
-              ipv4.address = mkIf (tf.state.resources ? tf.resources.${config.networking.hostName}.out.reference && cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.getAttr cfg.tf.ipv4_attr);
-              ipv6.address = mkIf (tf.state.resources ? tf.resources.${config.networking.hostName}.out.reference && cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.getAttr cfg.tf.ipv6_attr);
+              ipv4.address = mkIf (tf.state.resources ? ${tf.resources.${config.networking.hostName}.out.reference} && cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.importAttr cfg.tf.ipv4_attr);
+              ipv6.address = mkIf (tf.state.resources ? ${tf.resources.${config.networking.hostName}.out.reference} && cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.importAttr cfg.tf.ipv6_attr);
             })
             (mkIf cfg.dns.enable {
               subdomain = "${config.networking.hostName}";
