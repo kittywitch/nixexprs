@@ -112,13 +112,13 @@ in
   config =
     let
       networks = cfg.addresses;
-      networksWithDomains = filterAttrs (_: v: v.subdomain != null) networks;
+      networksWithDomains = filterAttrs (_: v: v.enable) networks;
     in
     mkIf cfg.enable {
       lib.kw.virtualHostGen = args: virtualHostGen ({ inherit config; } // args);
 
       network = {
-        dns = mkIf cfg.dns.enable {
+        dns = {
           domain = builtins.substring 0 ((builtins.stringLength cfg.dns.tld) - 1) cfg.dns.tld;
         };
         addresses = lib.mkMerge [
@@ -140,7 +140,7 @@ in
               };
             };
           })
-          (mkIf cfg.dns.enable {
+          ({
             private = {
               prefix = "int";
               subdomain = "${config.networking.hostName}.${cfg.addresses.private.prefix}";
