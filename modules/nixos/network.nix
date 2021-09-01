@@ -62,6 +62,10 @@ in
             type = types.nullOr types.str;
             default = "${config.subdomain}.${cfg.dns.domain}";
           };
+          target = mkOption {
+            type = types.nullOr types.str;
+            default = "${config.domain}.";
+          };
           out = {
             identifierList = mkOption {
               type = types.listOf types.str;
@@ -100,7 +104,7 @@ in
       email = mkOption {
         type = types.nullOr types.str;
       };
-      tld = mkOption {
+      zone = mkOption {
         type = types.nullOr types.str;
       };
       domain = mkOption {
@@ -119,7 +123,7 @@ in
 
       network = {
         dns = {
-          domain = builtins.substring 0 ((builtins.stringLength cfg.dns.tld) - 1) cfg.dns.tld;
+          domain = builtins.substring 0 ((builtins.stringLength cfg.dns.zone) - 1) cfg.dns.zone;
         };
         addresses = lib.mkMerge [
           (mkIf (!cfg.tf.enable) (genAttrs [ "private" "public" "yggdrasil" ] (network: {
@@ -172,19 +176,19 @@ in
           recordsV4 = mapAttrs'
             (n: v:
               nameValuePair "node_${n}_${config.networking.hostName}_v4" {
-                enable = v.tf.ipv4.enable;
-                tld = cfg.dns.tld;
+                inherit (v.tf.ipv4) enable;
+                inherit (cfg.dns) zone;
                 domain = v.subdomain;
-                a.address = v.tf.ipv4.address;
+                a = { inherit (v.tf.ipv4) address; };
               })
             networksWithDomains;
           recordsV6 = mapAttrs'
             (n: v:
               nameValuePair "node_${n}_${config.networking.hostName}_v6" {
-                enable = v.tf.ipv6.enable;
-                tld = cfg.dns.tld;
+                inherit (v.tf.ipv6) enable;
+                inherit (cfg.dns) zone;
                 domain = v.subdomain;
-                aaaa.address = v.tf.ipv6.address;
+                aaaa = { inherit (v.tf.ipv6) address; };
               })
             networksWithDomains;
         in
@@ -193,14 +197,14 @@ in
           recordsV6
           (mkIf cfg.dns.isRoot {
             "node_root_${config.networking.hostName}_v4" = {
-              enable = cfg.addresses.public.enable;
-              tld = cfg.dns.tld;
-              a.address = cfg.addresses.public.tf.ipv4.address;
+              inherit (cfg.addresses.public) enable;
+              inherit (cfg.dns) zone;
+              a = { inherit (cfg.addresses.public.tf.ipv4) address; };
             };
             "node_root_${config.networking.hostName}_v6" = {
-              enable = cfg.addresses.public.enable;
-              tld = cfg.dns.tld;
-              aaaa.address = cfg.addresses.public.tf.ipv6.address;
+              inherit (cfg.addresses.public) enable;
+              inherit (cfg.dns) zone;
+              aaaa = { inherit (cfg.addresses.public.tf.ipv6) address; };
             };
           })
         ]);

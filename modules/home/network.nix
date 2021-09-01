@@ -62,7 +62,7 @@ with lib;
       email = mkOption {
         type = types.nullOr types.str;
       };
-      tld = mkOption {
+      zone = mkOption {
         type = types.nullOr types.str;
       };
       domain = mkOption {
