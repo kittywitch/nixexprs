@@ -135,8 +135,8 @@ in
           (mkIf cfg.tf.enable {
             public = {
               tf = {
-                ipv4.address = mkIf (cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv4_attr);
-                ipv6.address = mkIf (cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv6_attr);
+                ipv4.address = mkIf (tf.state.resources ? ${tf.resources.${config.networking.hostName}.out.reference} && cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv4_attr);
+                ipv6.address = mkIf (tf.state.resources ? ${tf.resources.${config.networking.hostName}.out.reference} && cfg.tf.ipv6_attr != null) (tf.resources.${config.networking.hostName}.refAttr cfg.tf.ipv6_attr);
               };
               nixos = {
                 ipv4.address = mkIf (tf.state.resources ? ${tf.resources.${config.networking.hostName}.out.reference} && cfg.tf.ipv4_attr != null) (tf.resources.${config.networking.hostName}.importAttr cfg.tf.ipv4_attr);
@@ -168,7 +168,7 @@ in
 
       networking = mkIf cfg.addresses.private.enable {
         domain = mkDefault (if cfg.addresses.public.enable then cfg.addresses.domain
-          else if cfg.addresses.private.enable then "${cfg.addresses.private.prefix}.${cfg.addresses.domain}" else "");
+          else if cfg.addresses.private.enable then "${cfg.addresses.private.prefix}.${cfg.dns.domain}" else "");
         defaultGateway = cfg.privateGateway;
       };
 
