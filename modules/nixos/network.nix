@@ -167,7 +167,8 @@ in
       services.yggdrasil.package = pkgs.yggdrasil-held;
 
       networking = mkIf cfg.addresses.private.enable {
-        inherit (config.network.dns) domain;
+        domain = mkDefault (if cfg.addresses.public.enable then cfg.addresses.domain
+          else if cfg.addresses.private.enable then "${cfg.addresses.private.prefix}.${cfg.addresses.domain}" else "");
         defaultGateway = cfg.privateGateway;
       };
 
