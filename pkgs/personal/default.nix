@@ -1,4 +1,5 @@
 {
+  exa-noman = import ./exa-noman;
   disk-mapper = import ./disk-mapper;
   screenstub-kat = import ./screenstub-kat;
   sway-scrot = import ./sway-scrot;
