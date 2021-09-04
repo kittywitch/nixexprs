@@ -1,4 +1,11 @@
-{ lib, stdenv, fetchFromGitHub, rustPlatform, cmake, pkg-config, zlib, installShellFiles
+{ lib
+, stdenv
+, fetchFromGitHub
+, rustPlatform
+, cmake
+, pkg-config
+, zlib
+, installShellFiles
 }:
 
 rustPlatform.buildRustPackage rec {
@@ -18,7 +25,9 @@ rustPlatform.buildRustPackage rec {
   cargoSha256 = "sha256-ah8IjShmivS6IWL3ku/4/j+WNr/LdUnh1YJnPdaFdcM=";
 
   nativeBuildInputs = [
-    cmake pkg-config installShellFiles
+    cmake
+    pkg-config
+    installShellFiles
   ];
 
   buildInputs = [ zlib ];
