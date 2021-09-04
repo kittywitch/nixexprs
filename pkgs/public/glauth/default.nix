@@ -19,10 +19,6 @@ buildGoModule rec {
 
   preBuild = "go-bindata -pkg=assets -o=pkg/assets/bindata.go assets";
 
-  postBuild = ''
-    make plugins
-  '';
-
   doCheck = false;
 
   meta = with lib; {
