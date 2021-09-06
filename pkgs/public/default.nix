@@ -1,8 +1,6 @@
 {
   akiflags = import ./akiflags;
 
-  glauth = import ./glauth;
-
   swaylock-effects = import ./swaylock-effects;
 
   fusionpbx = import ./fusionpbx;
