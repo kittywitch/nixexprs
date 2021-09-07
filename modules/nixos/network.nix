@@ -126,7 +126,7 @@ in
           domain = builtins.substring 0 ((builtins.stringLength cfg.dns.zone) - 1) cfg.dns.zone;
         };
         addresses = lib.mkMerge [
-          (mkIf (!cfg.tf.enable) (genAttrs [ "private" "public" "yggdrasil" ] (network: {
+          (mkIf (!cfg.tf.enable) (genAttrs [ "private" "public" "yggdrasil" "wireguard" ] (network: {
             tf = {
               ipv4.address = mkIf (cfg.addresses.${network}.nixos.ipv4.enable) cfg.addresses.${network}.nixos.ipv4.address;
               ipv6.address = mkIf (cfg.addresses.${network}.nixos.ipv6.enable) cfg.addresses.${network}.nixos.ipv6.address;

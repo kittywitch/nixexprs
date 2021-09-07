@@ -2,18 +2,16 @@
 
 let
   fwcfg = config.networking.firewall;
-  cfg = config.network.nftables;
+  cfg = config.networking.nftables;
 
   doDocker = config.virtualisation.docker.enable && cfg.generateDockerRules;
 
-  mkPorts = cond: ports: ranges: action:
-    let
-      portStrings = (map (range: "${toString range.from}-${toString range.to}") ranges)
-        ++ (map toString ports);
-    in
-    lib.optionalString (portStrings != [ ]) ''
-      ${cond} dport { ${lib.concatStringsSep ", " portStrings} } ${action}
-    '';
+  mkPorts = cond: ports: ranges: action: let
+    portStrings = (map (range: "${toString range.from}-${toString range.to}") ranges)
+               ++ (map toString ports);
+  in lib.optionalString (portStrings != []) ''
+    ${cond} dport { ${lib.concatStringsSep ", " portStrings} } ${action}
+  '';
 
   ruleset = ''
     table inet filter {
@@ -82,12 +80,9 @@ let
     ${cfg.extraConfig}
   '';
 
-in
-{
+in {
   options = with lib; {
-    network.nftables = {
-      enable = mkEnableOption "nftables firewall";
-
+    networking.nftables = {
       extraConfig = mkOption {
         type = types.lines;
         default = "";
@@ -126,7 +121,6 @@ in
   config = lib.mkIf cfg.enable {
     networking.firewall.enable = false;
     networking.nftables = {
-      enable = true;
       inherit ruleset;
     };
 
