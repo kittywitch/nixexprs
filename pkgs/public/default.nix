@@ -1,6 +1,8 @@
 {
   akiflags = import ./akiflags;
 
+  hedgedoc-cli = import ./hedgedoc-cli;
+
   swaylock-effects = import ./swaylock-effects;
 
   fusionpbx = import ./fusionpbx;
