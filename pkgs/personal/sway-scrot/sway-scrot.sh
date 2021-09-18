@@ -24,11 +24,7 @@ SUBJECT=${2:-screen}
 FILENAME="$(date -Ins).png"
 FILE=${3:-$(getTargetDirectory)/$FILENAME}
 
-REMOTE_USER="kat"
-REMOTE_SERVER="kittywit.ch"
-REMOTE_PORT="62954"
-REMOTE_PATH="/var/www/files/"
-REMOTE_URL="https://files.kittywit.ch/"
+TOKEN=$(bitw get secrets/xbackbone -f token)
 
 if [ "$ACTION" != "save" ] && [ "$ACTION" != "copy" ] && [ "$ACTION" != "check" ] && [ "$ACTION" != "upload" ] && [ "$ACTION" != "copys" ]; then
 	echo "Usage:"
@@ -154,14 +150,29 @@ elif [ "$ACTION" = "copys" ]; then
 	else
 		notifyError "Error taking screenshot with grim"
 	fi
-elif [ "$ACTION" = "upload" ]; then 
+elif [ "$ACTION" = "upload" ]; then
 	if takeScreenshot "$FILE" "$GEOM" "$OUTPUT"; then
-		if scp -P $REMOTE_PORT $FILE $REMOTE_USER@$REMOTE_SERVER:$REMOTE_PATH$FILENAME; then
-			echo -n $REMOTE_URL$FILENAME | wl-copy
-			notifyOk "Uploaded: $REMOTE_URL$FILENAME"
-		else
-			notifyError "Error uploading screenshot"
-		fi 
+		RESPONSE="$(curl -s -F "token=$TOKEN" -F "upload=@\"$FILE\"" https://files.kittywit.ch/upload)";
+		    if [[ "$(echo "${RESPONSE}" | jq -r '.message')" == "OK" ]]; then
+			URL="$(echo "${RESPONSE}" | jq -r '.url')/raw";
+			    echo "${URL}" | wl-copy;
+			    echo "${URL}";
+			    notify-send "Upload completed!" "${URL}";
+			exit 0;
+		    else
+			MESSAGE="$(echo "${RESPONSE}" | jq -r '.message')";
+			if [ $? -ne 0 ]; then
+			    echo "Unexpected response:";
+			    echo "${RESPONSE}";
+			    exit 1;
+			fi
+			if [ "${DESKTOP_SESSION}" != "" ]; then
+			    notify-send "Error!" "${MESSAGE}";
+			else
+			    echo "Error! ${MESSAGE}";
+			fi
+			exit 1;
+		    fi
 	else 
 		notifyError "Error taking screenshot with grim"
 	fi

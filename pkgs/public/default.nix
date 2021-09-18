@@ -3,6 +3,8 @@
 
   hedgedoc-cli = import ./hedgedoc-cli;
 
+  xbackbone = import ./xbackbone;
+
   swaylock-effects = import ./swaylock-effects;
 
   fusionpbx = import ./fusionpbx;
