@@ -10,21 +10,25 @@
 
   package = nodeComposition.shell.override {
     inherit src;
-    buildInputs = [ libpng libjpeg giflib librsvg ];
-    nativeBuildInputs = [ nodePackages.node-pre-gyp nodePackages.node-gyp pkg-config vips glib ];
+    buildInputs = [ libpng libjpeg giflib librsvg vips glib ];
+    nativeBuildInputs = [ nodePackages.node-pre-gyp nodePackages.node-gyp pkg-config ];
   };
 in stdenv.mkDerivation rec {
   name = "kat-website";
   inherit src;
   inherit (package) nodeDependencies;
-  buildInputs = [ nodejs nodePackages.gatsby-cli ];
+  buildInputs = [ nodejs ];
   buildPhase = ''
-    ln -s $nodeDependencies/lib/node-modules
+    HOME=$(pwd)
+    mkdir -p .config/gatsby
+    mkdir -p .cache
+    cp -r $nodeDependencies/lib/node_modules node_modules
+    chmod 0777 -R node_modules
     export PATH="$nodeDependencies/bin:$PATH"
     gatsby build
   '';
   installPhase = ''
     mkdir $out
-    cp -r public $out
+    cp -r public/* $out
   '';
 }
