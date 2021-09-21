@@ -1,28 +1,30 @@
-{ fetchgit, stdenv, lib, bundler, ruby, bundlerEnv }:
-
-stdenv.mkDerivation rec {
-  pname = "kat-website";
-  version = "0.1";
-
-  src = fetchgit {
-    rev = "d2b6c62a745e505bee4a3a5ba72648d640beb2ca";
-    url = "https://github.com/kittywitch/website";
-    sha256 = "1qi8rd4nw199lkjkqgvc88knra3996zl6vagw8gvjl9x5m9h4vy3";
+{ stdenv, fetchFromGitHub, nodejs, callPackage, nodePackages, libpng, libjpeg, giflib, librsvg, vips, glib, pkg-config }: let
+  src = fetchFromGitHub {
+    owner = "kittywitch";
+    repo = "witchcore";
+    sha256 = "08jhcq6277i6vvmm9988w6rgfs36fj0zbc7ba0d9xhd0nr8qzqsz";
+    rev = "0fe220b231b93d37faaa07d6098207b878143fe0";
   };
 
-  jekyll_env = bundlerEnv rec {
-    name = "jekyll_env";
-    inherit ruby;
-    gemfile = "${src}/Gemfile";
-    lockfile = "${src}/Gemfile.lock";
-    gemset = ./gemset.nix;
+  nodeComposition = callPackage ./node-packages.nix { };
+
+  package = nodeComposition.shell.override {
+    inherit src;
+    buildInputs = [ libpng libjpeg giflib librsvg ];
+    nativeBuildInputs = [ nodePackages.node-pre-gyp nodePackages.node-gyp pkg-config vips glib ];
   };
-
-  buildInputs = [ bundler ruby jekyll_env ];
-
+in stdenv.mkDerivation rec {
+  name = "kat-website";
+  inherit src;
+  inherit (package) nodeDependencies;
+  buildInputs = [ nodejs nodePackages.gatsby-cli ];
+  buildPhase = ''
+    ln -s $nodeDependencies/lib/node-modules
+    export PATH="$nodeDependencies/bin:$PATH"
+    gatsby build
+  '';
   installPhase = ''
     mkdir $out
-    ${jekyll_env}/bin/jekyll build -d $out
+    cp -r public $out
   '';
 }
-

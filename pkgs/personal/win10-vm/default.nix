@@ -67,9 +67,7 @@ writeShellScriptBin "win10-vm" ''
    -blockdev '{"driver":"host_device","filename":"/dev/mapper/ata-ST2000DM008-2FR102_WK301C3H-part2","aio":"native","node-name":"libvirt-1-storage","cache":{"direct":true,"no-flush":false},"auto-read-only":true,"discard":"unmap"}' \
    -device scsi-hd,bus=scsi0.0,channel=0,scsi-id=0,lun=1,device_id=drive-scsi0-0-0-1,drive=libvirt-1-format,id=scsi0-0-0-1,bootindex=3 \
    -blockdev '{"node-name":"libvirt-1-format","read-only":false,"cache":{"direct":true,"no-flush":false},"driver":"raw","file":"libvirt-1-storage"}' \
-   -device virtio-net-pci,netdev=hostnet0,id=net0,mac=5b:f2:eb:3c:0b:46 \
-   -netdev bridge,id=hostnet0,br=br,helper=$(type -P qemu-bridge-helper) \
-   -netdev user,id=smbnet0,restrict=yes,net=10.1.2.0/24,host=10.1.2.1,smb=/home/kat/shared/,smbserver=10.1.2.2 \
+   -netdev user,id=smbnet0,restrict=no,net=10.1.2.0/24,host=10.1.2.1,smb=/home/kat/shared/,smbserver=10.1.2.2 \
    -device virtio-net-pci,netdev=smbnet0,id=net1,mac=2b:c6:c4:ac:67:ba \
    -device vfio-pci,host=0000:29:00.0,id=hostdev0,bus=pci.7,addr=0x0 \
    -device vfio-pci,host=0000:29:00.1,id=hostdev1,bus=pci.9,addr=0x0 \
@@ -86,3 +84,5 @@ writeShellScriptBin "win10-vm" ''
 ''
 
 # -device vfio-pci,host=0000:21:00.0,id,addr=0x0 \
+# -device virtio-net-pci,netdev=hostnet0,id=net0,mac=5b:f2:eb:3c:0b:46 \
+# -netdev bridge,id=hostnet0,br=br,helper=$(type -P qemu-bridge-helper) \
