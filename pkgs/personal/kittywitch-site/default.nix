@@ -2,8 +2,8 @@
   src = fetchFromGitHub {
     owner = "kittywitch";
     repo = "witchcore";
-    sha256 = "08jhcq6277i6vvmm9988w6rgfs36fj0zbc7ba0d9xhd0nr8qzqsz";
-    rev = "0fe220b231b93d37faaa07d6098207b878143fe0";
+    sha256 = "0b4nb4kf516d2zsj60blgkj7086jjp4d54h3534644m0d5b4bjyk";
+    rev = "c5eb70f292b34def282df18a562032df8c7d571b";
   };
 
   nodeComposition = callPackage ./node-packages.nix { };
