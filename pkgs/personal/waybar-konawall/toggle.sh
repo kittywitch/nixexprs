@@ -8,3 +8,5 @@ if systemctl --user is-active konawall-rotation.timer --quiet; then
 else
 	systemctl --user start konawall-rotation.timer
 fi
+
+pkill -SIGRTMIN+8 waybar
