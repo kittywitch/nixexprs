@@ -1,11 +1,11 @@
-{ lib, stdenv, fetchurl, python36, installShellFiles }:
+{ lib, stdenv, fetchurl, python38, installShellFiles }:
 
 stdenv.mkDerivation {
   pname = "akiflags";
   version = "0.0.1";
 
   buildInputs = [
-    python36
+    python38
   ];
 
   unpackPhase = "true";
