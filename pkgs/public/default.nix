@@ -5,8 +5,6 @@
 
   xbackbone = import ./xbackbone;
 
-  swaylock-effects = import ./swaylock-effects;
-
   fusionpbx = import ./fusionpbx;
   fusionpbx-apps = import ./fusionpbx-apps;
 
