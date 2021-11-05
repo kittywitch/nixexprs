@@ -10,14 +10,6 @@ writeShellScriptBin "win10-vm" ''
   -machine pc-q35-5.1,accel=kvm,usb=off,vmport=off,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,memory-backend=pc.ram \
    -monitor stdio \
    -cpu host,migratable=on,topoext=on,hv-time,hv-relaxed,hv-vapic,hv-spinlocks=0x1fff,host-cache-info=on,l3-cache=off -m 12288 \
-   -vcpu vcpunum=0,affinity=0 \
-   -vcpu vcpunum=1,affinity=1 \
-   -vcpu vcpunum=2,affinity=2 \
-   -vcpu vcpunum=3,affinity=3 \
-   -vcpu vcpunum=4,affinity=6 \
-   -vcpu vcpunum=5,affinity=7 \
-   -vcpu vcpunum=6,affinity=8 \
-   -vcpu vcpunum=7,affinity=9 \
    -object memory-backend-ram,id=pc.ram,size=12884901888 -overcommit mem-lock=off \
    -smp 8,sockets=1,dies=1,cores=4,threads=2 \
    -object iothread,id=iothread1 -uuid 96052919-6a83-4e9f-8e9b-628de3e27cc1 \
@@ -86,3 +78,11 @@ writeShellScriptBin "win10-vm" ''
 # -device vfio-pci,host=0000:21:00.0,id,addr=0x0 \
 # -device virtio-net-pci,netdev=hostnet0,id=net0,mac=5b:f2:eb:3c:0b:46 \
 # -netdev bridge,id=hostnet0,br=br,helper=$(type -P qemu-bridge-helper) \
+#  -vcpu vcpunum=0,affinity=0 \
+#   -vcpu vcpunum=1,affinity=1 \
+#   -vcpu vcpunum=2,affinity=2 \
+#   -vcpu vcpunum=3,affinity=3 \
+#   -vcpu vcpunum=4,affinity=6 \
+#   -vcpu vcpunum=5,affinity=7 \
+#   -vcpu vcpunum=6,affinity=8 \
+#   -vcpu vcpunum=7,affinity=9 \
