@@ -16,6 +16,6 @@ let
     };
   };
   scaffoldedUsers = map homeScaffold users;
-  baseProfile = if builtins.isAttrs profiles.base then profiles.base.imports else singleton profiles.base;
+  baseProfile = singleton profiles.base;
 in
 filter builtins.pathExists replacedLists.nixos ++ baseProfile ++ scaffoldedUsers

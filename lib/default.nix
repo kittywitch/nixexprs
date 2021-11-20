@@ -16,7 +16,6 @@ let
       virtualHostGen = import ./virtual-host-gen.nix { inherit lib; };
       domainMerge = import ./domain-merge.nix { inherit lib; };
       modListMerge = import ./intersect-merge.nix { inherit lib; };
-      recursiveMod = import ./recursivemod.nix { inherit lib; };
       modList = import ./module-list.nix { inherit lib; };
       folderList = import ./folder-list.nix { inherit lib; };
     };
