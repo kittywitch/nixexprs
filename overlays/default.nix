@@ -1,4 +1,4 @@
-{
+let
   foldr = op: nul: list:
     let
       len = builtins.length list;
@@ -14,7 +14,7 @@
       in fApplied // g final prev';
   composeManyExtensions =
     foldr (x: y: composeExtensions x y) (final: prev: {});
-
+in {
   pkgs = import ./pkgs.nix;
   lib = import ./lib.nix;
 
