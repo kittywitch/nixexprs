@@ -8,6 +8,8 @@
   fusionpbx = import ./fusionpbx;
   fusionpbx-apps = import ./fusionpbx-apps;
 
+  headsetcontrol = import ./headsetcontrol;
+
   fusionpbxWithApps = { symlinkJoin, fusionpbx, ... }: apps: symlinkJoin {
     inherit (fusionpbx) version name;
     paths = [ fusionpbx ] ++ apps;
