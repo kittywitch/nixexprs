@@ -15,11 +15,13 @@ getTargetDirectory() {
 if [ -n "$SWAYSOCK" ]; then
 	SWAY=yes;
 	MSGER=swaymsg;
-	COPIER="wl-copy --type image/png";
+	COPIER="wl-copy";
+	COPIERIMG="wl-copy --type image/png";
 else
 	SWAY=no;
 	MSGER=i3-msg;
-	COPIER="xclip -sel c -t image/png"
+	COPIER="xclip -sel c"
+	COPIERIMG="xclip -sel c -t image/png"
 fi
 
 if [ "$1" = "--notify" ]; then
@@ -200,7 +202,7 @@ else
 fi
 
 if [ "$ACTION" = "copy" ] ; then
-	takeScreenshot - "$GEOM" "$OUTPUT" | $COPIER || die "Clipboard error"
+	takeScreenshot - "$GEOM" "$OUTPUT" | $COPIERIMG || die "Clipboard error"
 	echo $FILE
 	notifyOk "$WHAT copied to buffer"
 elif [ "$ACTION" = "copys" ]; then 
