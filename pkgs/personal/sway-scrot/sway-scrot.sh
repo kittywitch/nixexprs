@@ -3,14 +3,24 @@
 ## Requirements:
 ##  - `grim`: screenshot utility for wayland
 ##  - `slurp`: to select an area
-##  - `swaymsg`: to read properties of current window
-##  - `wl-copy`: clipboard utility
-##  - `jq`: json utility to parse swaymsg output
+##  - `$MSGER`: to read properties of current window
+##  - `$COPIER`: clipboard utility
+##  - `jq`: json utility to parse $MSGER output
 ##  - `notify-send`: to show notifications
 
 getTargetDirectory() {
 	echo "/home/kat/media/scrots"
 }
+
+if [ -n "$SWAYSOCK" ]; then
+	SWAY=yes;
+	MSGER=swaymsg;
+	COPIER="wl-copy --type image/png";
+else
+	SWAY=no;
+	MSGER=i3-msg;
+	COPIER="xclip -sel c -t image/png"
+fi
 
 if [ "$1" = "--notify" ]; then
 	NOTIFY=yes
@@ -89,12 +99,24 @@ takeScreenshot() {
 	FILE=$1
 	GEOM=$2
 	OUTPUT=$3
-	if [ ! -z "$OUTPUT" ]; then
-		grim -o "$OUTPUT" "$FILE" || die "Unable to invoke grim"
-	elif [ -z "$GEOM" ]; then
-		grim "$FILE" || die "Unable to invoke grim"
+	if [ "$SWAY" = "yes" ]; then
+		if [ ! -z "$OUTPUT" ]; then
+			grim -o "$OUTPUT" "$FILE" || die "Unable to invoke grim"
+		elif [ -z "$GEOM" ]; then
+				grim "$FILE" || die "Unable to invoke grim"
+		else
+			grim -g "$GEOM" "$FILE" || die "Unable to invoke grim"
+		fi
 	else
-		grim -g "$GEOM" "$FILE" || die "Unable to invoke grim"
+			if [ "$GEOM" = "maim-cur" ]; then
+				maim -i $(xdotool getactivewindow) "$FILE"
+			elif [ "$GEOM" = "maim-s" ]; then
+				maim -s "$FILE"
+			elif [ "$GEOM" = "maim-out" ]; then
+				maim -g "$OUTPUT" "$FILE"
+			elif [ "$GEOM" = "maim-screen" ]; then
+				maim "$FILE"
+			fi
 	fi
 }
 
@@ -102,8 +124,8 @@ if [ "$ACTION" = "check" ] ; then
 	echo "Checking if required tools are installed. If something is missing, install it to your system and make it available in PATH..."
 	check grim
 	check slurp
-	check swaymsg
-	check wl-copy
+	check $MSGER
+	check $COPIER
 	check jq
 	check notify-send
 	exit
@@ -115,19 +137,59 @@ elif [ "$SUBJECT" = "area" ] ; then
 	fi
 	WHAT="Area"
 elif [ "$SUBJECT" = "active" ] ; then
-	FOCUSED=$(swaymsg -t get_tree | jq -r 'recurse(.nodes[]?, .floating_nodes[]?) | select(.focused)')
+	if [ "$SWAY" = "yes" ]; then
+	FOCUSED=$($MSGER -t get_tree | jq -r 'recurse(.nodes[]?, .floating_nodes[]?) | select(.focused)')
 	GEOM=$(echo "$FOCUSED" | jq -r '.rect | "\(.x),\(.y) \(.width)x\(.height)"')
 	APP_ID=$(echo "$FOCUSED" | jq -r '.app_id')
 	WHAT="$APP_ID window"
+	else
+		GEOM="maim-cur"
+	fi
 elif [ "$SUBJECT" = "screen" ] ; then
+	if [ "$SWAY" = "yes" ]; then
 	GEOM=""
 	WHAT="Screen"
+	else
+		GEOM="maim-screen";
+	fi
 elif [ "$SUBJECT" = "output" ] ; then
+	if [ "$SWAY" = "yes" ]; then 
 	GEOM=""
-	OUTPUT=$(swaymsg -t get_outputs | jq -r '.[] | select(.focused)' | jq -r '.name')
+	OUTPUT=$($MSGER -t get_outputs | jq -r '.[] | select(.focused)' | jq -r '.name')
 	WHAT="$OUTPUT"
+	else
+MONITORS=$(xrandr | grep -o '[0-9]*x[0-9]*[+-][0-9]*[+-][0-9]*')
+# Get the location of the mouse
+XMOUSE=$(xdotool getmouselocation | awk -F "[: ]" '{print $2}')
+YMOUSE=$(xdotool getmouselocation | awk -F "[: ]" '{print $4}')
+
+for mon in ${MONITORS}; do
+  # Parse the geometry of the monitor
+  MONW=$(echo ${mon} | awk -F "[x+]" '{print $1}')
+  MONH=$(echo ${mon} | awk -F "[x+]" '{print $2}')
+  MONX=$(echo ${mon} | awk -F "[x+]" '{print $3}')
+  MONY=$(echo ${mon} | awk -F "[x+]" '{print $4}')
+  # Use a simple collision check
+  if (( ${XMOUSE} >= ${MONX} )); then
+    if (( ${XMOUSE} <= ${MONX}+${MONW} )); then
+      if (( ${YMOUSE} >= ${MONY} )); then
+        if (( ${YMOUSE} <= ${MONY}+${MONH} )); then
+          # We have found our monitor!
+					GEOM="maim-out"
+          OUTPUT="${MONW}x${MONH}+${MONX}+${MONY}"
+          break
+        fi
+      fi
+    fi
+  fi
+done
+	fi
 elif [ "$SUBJECT" = "window" ] ; then
-	GEOM=$(swaymsg -t get_tree | jq -r '.. | select(.pid? and .visible?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"' | slurp)
+	if [ "$SWAY" = "yes" ]; then
+		GEOM=$($MSGER -t get_tree | jq -r '.. | select(.pid? and .visible?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"' | slurp)
+	else
+		GEOM="maim-s"
+	fi
 	# Check if user exited slurp without selecting the area
 	if [ -z "$GEOM" ]; then
 		exit
@@ -138,7 +200,8 @@ else
 fi
 
 if [ "$ACTION" = "copy" ] ; then
-	takeScreenshot - "$GEOM" "$OUTPUT" | wl-copy --type image/png || die "Clipboard error"
+	takeScreenshot - "$GEOM" "$OUTPUT" | $COPIER || die "Clipboard error"
+	echo $FILE
 	notifyOk "$WHAT copied to buffer"
 elif [ "$ACTION" = "copys" ]; then 
 	if takeScreenshot "$FILE" "$GEOM" "$OUTPUT"; then
@@ -146,7 +209,7 @@ elif [ "$ACTION" = "copys" ]; then
 		MESSAGE=$(basename "$FILE")
 		notifyOk "$MESSAGE" "$TITLE"
 		echo $FILE
-		cat "$FILE" | wl-copy --type image/png || die "Clipboard error"
+		cat "$FILE" | $COPIER || die "Clipboard error"
 	else
 		notifyError "Error taking screenshot with grim"
 	fi
@@ -155,7 +218,7 @@ elif [ "$ACTION" = "upload" ]; then
 		RESPONSE="$(curl -s -F "token=$TOKEN" -F "upload=@\"$FILE\"" https://files.kittywit.ch/upload)";
 		    if [[ "$(echo "${RESPONSE}" | jq -r '.message')" == "OK" ]]; then
 			URL="$(echo "${RESPONSE}" | jq -r '.url')/raw";
-			    echo "${URL}" | wl-copy;
+			    echo "${URL}" | $COPIER;
 			    echo "${URL}";
 			    notify-send "Upload completed!" "${URL}";
 			exit 0;
