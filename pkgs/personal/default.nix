@@ -9,4 +9,5 @@
   taskwarrior-export = import ./taskwarrior-export;
   waybar-konawall = import ./waybar-konawall;
   win10-vm = import ./win10-vm;
+  win10-vm-pinning = import ./win10-vm-pinning;
 }

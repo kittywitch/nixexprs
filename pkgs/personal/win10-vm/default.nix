@@ -1,16 +1,18 @@
 { pkgs, writeShellScriptBin }:
 
 writeShellScriptBin "win10-vm" ''
+  echo 3 | sudo tee /proc/sys/vm/drop_caches > /dev/null || true; echo 1 | sudo tee /proc/sys/vm/compact_memory > /dev/null || true
+  echo 12 | sudo tee /sys/kernel/mm/hugepages/hugepages-1048576kB/nr_hugepages
   cat ${pkgs.OVMF.fd}/FV/OVMF_VARS.fd > /tmp/OVMF_VARS.fd
   ${pkgs.qemu-vfio}/bin/qemu-system-x86_64 -name guest=win10,debug-threads=on \
   -blockdev '{"driver":"file","filename":"${pkgs.OVMF.fd}/FV/OVMF_CODE.fd","node-name":"libvirt-pflash0-storage","auto-read-only":true,"discard":"unmap"}' \
   -blockdev '{"node-name":"libvirt-pflash0-format","read-only":true,"driver":"raw","file":"libvirt-pflash0-storage"}' \
   -blockdev '{"driver":"file","filename":"/tmp/OVMF_VARS.fd","node-name":"libvirt-pflash1-storage","auto-read-only":true,"discard":"unmap"}' \
   -blockdev '{"node-name":"libvirt-pflash1-format","read-only":false,"driver":"raw","file":"libvirt-pflash1-storage"}' \
-  -machine pc-q35-5.1,accel=kvm,usb=off,vmport=off,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format,memory-backend=pc.ram \
+  -machine pc-q35-5.1,accel=kvm,usb=off,vmport=off,dump-guest-core=off,pflash0=libvirt-pflash0-format,pflash1=libvirt-pflash1-format \
    -monitor stdio \
-   -cpu host,migratable=on,topoext=on,hv-time,hv-relaxed,hv-vapic,hv-spinlocks=0x1fff,host-cache-info=on,l3-cache=off -m 12288 \
-   -object memory-backend-ram,id=pc.ram,size=12884901888 -overcommit mem-lock=off \
+   -cpu host,migratable=no,+invtsc,topoext=on,hv-time,hv-relaxed,hv-vapic,-amd-stibp,,hv-synic,hv-spinlocks=0x1fff,host-cache-info=on,l3-cache=off -m 12288 \
+   -mem-path /dev/hugepages1G/qemu-win10-vm -mem-prealloc \
    -smp 8,sockets=1,dies=1,cores=4,threads=2 \
    -object iothread,id=iothread1 -uuid 96052919-6a83-4e9f-8e9b-628de3e27cc1 \
    -display none \
